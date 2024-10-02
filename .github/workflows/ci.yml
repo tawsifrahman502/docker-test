@@ -27,22 +27,18 @@ jobs:
     runs-on: windows-latest  # Run the deployment on a Windows environment
 
     steps:
-    - name: Upload Root Folder to VPS via FTP using PowerShell
+    - name: Upload hello.exe to VPS via FTP using PowerShell
       run: |
         $username = "${{ secrets.VPS_USER }}"
         $password = "${{ secrets.VPS_PASSWORD }}"
         $credentials = [System.Text.Encoding]::UTF8.GetBytes("${username}:${password}")
         $encodedCreds = [Convert]::ToBase64String($credentials)
-  
-        $folderPath = "./"
-  
-        Get-ChildItem -File -Recurse $folderPath | ForEach-Object {
-          $filePath = $_.FullName
-          $relativePath = $_.FullName.Substring($folderPath.Length + 1) # Get relative path of the file
-          Write-Host "Uploading $filePath to ftp://${{ secrets.VPS_IP }}/docker-test/$relativePath"
-          $relativePath = $_.FullName.Substring($folderPath.Length) # Get the relative path of the file
-          Write-Host "Uploading file: $filePath"
-          Write-Host "Uploading to: ftp://${{ secrets.VPS_IP }}/docker-test/$relativePath"
-          curl -T "$filePath" -H "Authorization: Basic $encodedCreds" "ftp://${{ secrets.VPS_IP }}/docker-test/$relativePath"
-        }
+
+        # Define the source file and destination path
+        $sourceFile = "./hello.exe"
+        $destinationPath = "ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
+
+        # Use curl to upload the file
+        Write-Host "Uploading $sourceFile to $destinationPath"
+        curl -T "$sourceFile" -H "Authorization: Basic $encodedCreds" "$destinationPath"
       shell: pwsh
