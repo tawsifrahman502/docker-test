@@ -44,7 +44,7 @@ jobs:
         $cred = New-Object System.Management.Automation.PSCredential ($username, $password)
 
         # Map the network drive (e.g., Z:) to the remote path
-        New-PSDrive -Name Z -PSProvider FileSystem -Root "\\ec2-3-18-112-50.us-east-2.compute.amazonaws.com\C$\Users\Administrator\docker-test" -Credential $cred -Persist
+        New-PSDrive -Name Z -PSProvider FileSystem -Root "\\ec2-3-18-112-50.us-east-2.compute.amazonaws.com\C$\docker-test" -Credential $cred -Persist
 
         # Copy the file to the mapped drive
         Copy-Item -Path ./hello.exe -Destination Z:\hello.exe
