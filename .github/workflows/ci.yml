@@ -39,6 +39,7 @@ jobs:
 
     - name: Upload hello.exe to VPS using WinRM (HTTP)
       run: |
+        winrm set winrm/config/client '@{AllowUnencrypted="true"}'
         $username = "${{ secrets.VPS_USER }}"
         $password = "${{ secrets.VPS_PASSWORD }}"
         $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
