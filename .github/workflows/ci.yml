@@ -21,30 +21,16 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-
-  deploy:
-    needs: build
-    runs-on: windows-latest  # Run the deployment on a Windows environment
-
-    steps:
-    - name: Upload Root Folder to VPS via FTP using PowerShell
+    - name: Upload hello.exe to VPS via FTP
       run: |
+        # Encode the credentials in PowerShell (Base64 encoding)
         $username = "${{ secrets.VPS_USER }}"
         $password = "${{ secrets.VPS_PASSWORD }}"
         $credentials = [System.Text.Encoding]::UTF8.GetBytes("${username}:${password}")
         $encodedCreds = [Convert]::ToBase64String($credentials)
 
-        $folderPath = "./"
+        # Upload hello.exe to the docker-test folder on VPS
+        Write-Host "Uploading hello.exe to ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
 
-
-        Get-ChildItem -File -Recurse $folderPath | ForEach-Object {
-          $filePath = $_.FullName
-          $relativePath = $_.FullName.Substring($folderPath.Length) # Get the relative path of the file
-
-          Write-Host "Uploading file: $filePath"
-          Write-Host "Uploading to: ftp://${{ secrets.VPS_IP }}/docker-test/$relativePath"
-
-          curl -T "$filePath" -H "Authorization: Basic $encodedCreds" "ftp://${{ secrets.VPS_IP }}/docker-test/$relativePath"
-        }
+        curl -T "./hello.exe" -H "Authorization: Basic $encodedCreds" "ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
       shell: pwsh
-
