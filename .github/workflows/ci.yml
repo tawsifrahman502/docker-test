@@ -1,14 +1,11 @@
 # .github/workflows/ci.yml
 
-name: C++ CI/CD Pipeline for Windows
+name: Build and Push .exe to Windows VPS via WinRM
 
 on:
   push:
     branches:
       - main  # Run this on every push to the main branch
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -18,26 +15,33 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Build the C++ program using g++
-      run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
-
-    - name: Copy hello.exe to VPS via SMB
+    - name: Install MinGW
       run: |
-        $NetDrive = "Z"
-        $NetShare = "\\${{ secrets.VPS_IP }}\docker-test"  # Path to the shared folder
-        $username = "${{ secrets.VPS_USER }}"
-        $password = "${{ secrets.VPS_PASSWORD }}"
+        choco install mingw
+        refreshenv
 
-        # Create the credential object
+    - name: Compile C++ program
+      run: |
+        g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
+      shell: bash
+
+    - name: Push .exe to Windows VPS via WinRM
+      run: |
+        $username = "${{ secrets.VPS_USER }}"  # Administrator or VPS user
+        $password = "${{ secrets.VPS_PASSWORD }}"  # Password for the VPS user
         $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
         $credential = New-Object System.Management.Automation.PSCredential($username, $securePassword)
 
-        # Map the network drive
-        New-PSDrive -Name $NetDrive -PSProvider FileSystem -Root $NetShare -Credential $credential -Persist
+        # VPS IP and target destination path
+        $vpsIp = "${{ secrets.VPS_IP }}"
+        $destinationPath = "C:\\Users\\Administrator\\hello.exe"  # Change path as necessary
 
-        # Copy hello.exe to the shared folder
-        Copy-Item -Path "./hello.exe" -Destination "$NetDrive\hello.exe"
+        # Start a WinRM session to the VPS
+        $session = New-PSSession -ComputerName $vpsIp -Credential $credential
 
-        # Remove the mapped drive after copying
-        Remove-PSDrive -Name Z
+        # Copy the compiled .exe to the VPS
+        Copy-Item -Path "./hello.exe" -Destination $destinationPath -ToSession $session
+
+        # Close the session
+        Remove-PSSession $session
       shell: pwsh
