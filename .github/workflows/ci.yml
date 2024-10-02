@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-latest  # Build the C++ application on Windows
 
     steps:
     - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # Use a Linux runner to perform SCP
 
     steps:
     - name: Download Build Artifacts
@@ -37,18 +37,8 @@ jobs:
       with:
         name: hello
 
-    - name: Use PowerShell Remoting to Copy hello.exe to EC2 Windows VM
+    - name: Copy hello.exe to EC2 using SCP
       run: |
-        $username = "Administrator"
-        $password = "${{ secrets.SERVER_PASSWORD }}" | ConvertTo-SecureString -AsPlainText -Force
-        $cred = New-Object System.Management.Automation.PSCredential ($username, $password)
-
-        # Define the remote script to copy the file
-        $remoteScript = {
-            param ($file)
-            Copy-Item -Path $file -Destination "C:\docker-test" -Force
-        }
-
-        # Invoke-Command to execute the file copy on the remote EC2 instance
-        Invoke-Command -ComputerName "ec2-3-18-112-50.us-east-2.compute.amazonaws.com" -Credential $cred -ScriptBlock $remoteScript -ArgumentList "./hello.exe"
-      shell: pwsh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_rsa
+        chmod 600 id_rsa
+        scp -i id_rsa -o StrictHostKeyChecking=no ./hello.exe Administrator@ec2-3-18-112-50.us-east-2.compute.amazonaws.com:/C:/Udocker-test/hello.exe
