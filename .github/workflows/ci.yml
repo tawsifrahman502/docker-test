@@ -27,8 +27,12 @@ jobs:
     runs-on: windows-latest  # Run the deployment on a Windows environment
 
     steps:
-    - name: Upload File to VPS via FTP with Base64 Authentication
+    - name: Upload File to VPS via FTP using PowerShell
       run: |
-        # Encode username and password in Base64
-        ENCODED_CREDS=$(echo -n "${{ secrets.VPS_USER }}:${{ secrets.VPS_PASSWORD }}" | base64)
-        curl -T "./hello.exe" -H "Authorization: Basic $ENCODED_CREDS" "ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
+        $username = "${{ secrets.VPS_USER }}"
+        $password = "${{ secrets.VPS_PASSWORD }}"
+        $credentials = [System.Text.Encoding]::UTF8.GetBytes("${username}:${password}")
+        $encodedCreds = [Convert]::ToBase64String($credentials)
+  
+        curl -T "./hello.exe" -H "Authorization: Basic $encodedCreds" "ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
+      shell: pwsh
