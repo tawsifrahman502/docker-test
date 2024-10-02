@@ -42,10 +42,12 @@ jobs:
         $username = "Administrator"
         $password = "${{ secrets.SERVER_PASSWORD }}" | ConvertTo-SecureString -AsPlainText -Force
         $cred = New-Object System.Management.Automation.PSCredential ($username, $password)
-
-        # Define the remote path on the Windows VM
-        $remotePath = "\\ec2-3-18-112-50.us-east-2.compute.amazonaws.com\C$\docker-test\hello.exe"
-
-        # Use Copy-Item to transfer the file
-        Copy-Item -Path ./hello.exe -Destination $remotePath -Credential $cred
-      shell: pwsh  # Use PowerShell for the deployment step
+    
+        # Check if the directory exists
+        if (-Not (Test-Path "\\ec2-3-18-112-50.us-east-2.compute.amazonaws.com\C$\docker-test")) {
+            Write-Host "Directory does not exist!"
+        }
+    
+        # Copy the file
+        Copy-Item -Path ./hello.exe -Destination "\\ec2-3-18-112-50.us-east-2.compute.amazonaws.com\C$\docker-test\hello.exe" -Credential $cred
+      shell: pwsh
