@@ -27,10 +27,7 @@ jobs:
     runs-on: windows-latest  # Run the deployment on a Windows environment
 
     steps:
-    - name: Download Build Artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: hello
+  
 
     - name: Upload Folder to VPS via FTP
       env:
