@@ -15,15 +15,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install MinGW
-      run: |
-        choco install mingw
-        refreshenv
-
     - name: Compile C++ program
-      run: |
-        g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
-      shell: bash
+      run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
     - name: Push .exe to Windows VPS via WinRM
       run: |
