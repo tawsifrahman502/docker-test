@@ -1,0 +1,51 @@
+# .github/workflows/ci.yml
+
+name: C++ CI/CD Pipeline (Windows)
+
+on:
+  push:
+    branches:
+      - main  # Run this on every push to the main branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest  # Use Windows runner for building the C++ code
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install MSVC (Microsoft C++ Build Tools)
+      run: |
+        choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
+        refreshenv
+
+    - name: Build the C++ program
+      run: |
+        cl /EHsc main.cpp /Fehello.exe
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: hello
+        path: ./hello.exe
+
+  deploy:
+    needs: build
+    runs-on: windows-latest  # Windows runner for deployment as well
+
+    steps:
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: hello
+
+    - name: Transfer and Execute on Windows VM using pscp
+      run: |
+        Start-Process pscp -ArgumentList "-pw ${{ secrets.SERVER_PASSWORD }} hello.exe Administrator@ec2-3-18-112-50.us-east-2.compute.amazonaws.com:C:/path/to/deploy/hello.exe"
+      env:
+        SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+
