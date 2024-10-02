@@ -21,12 +21,6 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: hello
-        path: ./hello.exe
-
     - name: Deploy to VPS
       env:
         VPS_IP: ${{ secrets.VPS_IP }}
