@@ -21,11 +21,6 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: hello
-        path: ./hello.exe  # Uploads the compiled binary (hello.exe)
 
   deploy:
     needs: build
@@ -37,18 +32,10 @@ jobs:
       with:
         name: hello
 
-    - name: Copy hello.exe to Windows VM using New-PSDrive
+    - name: Upload Folder to VPS via FTP
+      env:
+        FTP_SERVER: ${{ secrets.VPS_IP }}
+        FTP_USER: ${{ secrets.VPS_USER }}
+        FTP_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
-        $username = "Administrator"
-        $password = "${{ secrets.SERVER_PASSWORD }}" | ConvertTo-SecureString -AsPlainText -Force
-        $cred = New-Object System.Management.Automation.PSCredential ($username, $password)
-
-        # Map the network drive (Z:) to the remote path
-        New-PSDrive -Name Z -PSProvider FileSystem -Root "\\3.18.112.50\C$\docker-test" -Credential $cred -Persist
-
-        # Copy the file to the mapped drive without specifying credentials again
-        Copy-Item -Path ./hello.exe -Destination Z:\hello.exe
-
-        # Unmount the mapped network drive
-        Remove-PSDrive -Name Z
-      shell: pwsh
+        curl -T "./*" ftp://$FTP_SERVER/C:/docker-test/ --user $FTP_USER:$FTP_PASSWORD
