@@ -30,9 +30,5 @@ jobs:
   
 
     - name: Upload Folder to VPS via FTP
-      env:
-        FTP_SERVER: ${{ secrets.VPS_IP }}
-        FTP_USER: ${{ secrets.VPS_USER }}
-        FTP_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
-        curl -T "./*" ftp://$FTP_SERVER/C:/docker-test/ --user $FTP_USER:$FTP_PASSWORD
+        curl -T "./*" ftp://${{ secrets.VPS_IP }}/C:/docker-test/ --user ${{ secrets.VPS_USER }}:${{ secrets.VPS_PASSWORD }}
