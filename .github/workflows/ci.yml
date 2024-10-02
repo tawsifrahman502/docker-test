@@ -27,18 +27,16 @@ jobs:
         name: hello
         path: ./hello.exe
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest  # Use a Linux runner to perform SCP
-
-    steps:
-    - name: Download Build Artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: hello
-
-    - name: Copy hello.exe to EC2 using SCP
+    - name: Deploy to VPS
+      env:
+        VPS_IP: ${{ secrets.VPS_IP }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_rsa
-        chmod 600 id_rsa
-        scp -i id_rsa -o StrictHostKeyChecking=no ./hello.exe Administrator@ec2-3-18-112-50.us-east-2.compute.amazonaws.com:/C:/Udocker-test/hello.exe
+        # Use PowerShell to copy files to the VPS and execute the .exe
+        $session = New-PSSession -ComputerName $env:VPS_IP -Credential (New-Object System.Management.Automation.PSCredential("$env:VPS_USER", (ConvertTo-SecureString "$env:VPS_PASSWORD" -AsPlainText -Force)))
+        Copy-Item -Path .\* -Destination 'C:\docker-test\' -ToSession $session
+        Invoke-Command -Session $session -ScriptBlock {
+            Start-Process "C:\docker-test\hello.exe"
+        }
+        Remove-PSSession -Session $session
