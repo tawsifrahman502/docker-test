@@ -23,10 +23,13 @@ jobs:
         choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
         echo "Visual Studio Build Tools installed."
 
-    - name: Set up MSVC Environment
+    - name: Find and set up MSVC Environment
       shell: cmd
       run: |
-        "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        for /r "C:\Program Files (x86)\Microsoft Visual Studio" %i in (vcvarsall.bat) do @echo %i > vcvarsall_path.txt
+        set /p vcvarsall_path=<vcvarsall_path.txt
+        echo Running MSVC environment setup from %vcvarsall_path%
+        call "%vcvarsall_path%" x64
         echo "MSVC environment is set."
 
     - name: Build the C++ program
