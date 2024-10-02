@@ -29,6 +29,7 @@ jobs:
     steps:
   
 
-    - name: Upload Folder to VPS via FTP
-      run: |
-        curl -T "./*" ftp://${{ secrets.VPS_IP }}/C:/docker-test/ --user ${{ secrets.VPS_USER }}:${{ secrets.VPS_PASSWORD }}
+      - name: Upload Folder to VPS via FTP
+        run: |
+          curl -T "./hello.exe" "ftp://${{ secrets.VPS_USER }}:${{ secrets.VPS_PASSWORD }}@${{ secrets.VPS_IP }}/C:/docker-test/hello.exe"
+
