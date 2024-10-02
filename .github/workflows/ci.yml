@@ -28,7 +28,7 @@ jobs:
         cl /EHsc main.cpp /Fehello.exe
 
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3  # Updated to v3
       with:
         name: hello
         path: ./hello.exe
@@ -39,7 +39,7 @@ jobs:
 
     steps:
     - name: Download Build Artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3  # Updated to v3
       with:
         name: hello
 
@@ -48,4 +48,3 @@ jobs:
         Start-Process pscp -ArgumentList "-pw ${{ secrets.SERVER_PASSWORD }} hello.exe Administrator@ec2-3-18-112-50.us-east-2.compute.amazonaws.com:C:/path/to/deploy/hello.exe"
       env:
         SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
-
