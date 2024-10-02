@@ -37,7 +37,7 @@ jobs:
       with:
         name: hello-exe  # Download the artifact (hello.exe)
 
-    - name: Upload hello.exe to VPS using WinRM
+    - name: Upload hello.exe to VPS using WinRM (HTTP)
       run: |
         $username = "${{ secrets.VPS_USER }}"
         $password = "${{ secrets.VPS_PASSWORD }}"
@@ -48,8 +48,8 @@ jobs:
         $vpsIp = "${{ secrets.VPS_IP }}"
         $destinationPath = "C:\\docker-test\\hello.exe"
 
-        # Use WinRM to establish a session and copy the file to the remote server
-        $session = New-PSSession -ComputerName $vpsIp -Credential $credential -Authentication Basic -UseSSL -Port 5985
+        # Use WinRM to establish a session and copy the file to the remote server (HTTP on port 5985)
+        $session = New-PSSession -ComputerName $vpsIp -Credential $credential -Authentication Basic -Port 5985
 
         # Copy hello.exe to the destination folder on the VPS
         Copy-Item -Path "./hello.exe" -Destination $destinationPath -ToSession $session
