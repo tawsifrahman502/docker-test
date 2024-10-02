@@ -1,6 +1,6 @@
 # Makefile
 hello: main.cpp
-    g++ -o hello main.cpp
+<TAB>g++ -o hello main.cpp
 
 clean:
-    rm -f hello
+<TAB>rm -f hello
