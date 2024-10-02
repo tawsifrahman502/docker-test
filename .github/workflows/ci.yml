@@ -37,18 +37,18 @@ jobs:
       with:
         name: hello
 
-    - name: Copy hello.exe to Windows VM using New-PSDrive
+    - name: Use PowerShell Remoting to Copy hello.exe to EC2 Windows VM
       run: |
         $username = "Administrator"
         $password = "${{ secrets.SERVER_PASSWORD }}" | ConvertTo-SecureString -AsPlainText -Force
         $cred = New-Object System.Management.Automation.PSCredential ($username, $password)
 
-        # Map the network drive (e.g., Z:) to the remote path
-        New-PSDrive -Name Z -PSProvider FileSystem -Root "\\ec2-3-18-112-50.us-east-2.compute.amazonaws.com\C$\docker-test" -Credential $cred -Persist
+        # Define the remote script to copy the file
+        $remoteScript = {
+            param ($file)
+            Copy-Item -Path $file -Destination "C:\docker-test" -Force
+        }
 
-        # Copy the file to the mapped drive
-        Copy-Item -Path ./hello.exe -Destination Z:\hello.exe
-
-        # Remove the mapped drive
-        Remove-PSDrive -Name Z
+        # Invoke-Command to execute the file copy on the remote EC2 instance
+        Invoke-Command -ComputerName "ec2-3-18-112-50.us-east-2.compute.amazonaws.com" -Credential $cred -ScriptBlock $remoteScript -ArgumentList "./hello.exe"
       shell: pwsh
