@@ -21,16 +21,23 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    - name: Upload hello.exe to VPS via FTP
+    - name: Copy hello.exe to VPS via SMB
       run: |
-        # Encode the credentials in PowerShell (Base64 encoding)
+        $NetDrive = "Z:"
+        $NetShare = "\\${{ secrets.VPS_IP }}\docker-test"  # Path to the shared folder
         $username = "${{ secrets.VPS_USER }}"
         $password = "${{ secrets.VPS_PASSWORD }}"
-        $credentials = [System.Text.Encoding]::UTF8.GetBytes("${username}:${password}")
-        $encodedCreds = [Convert]::ToBase64String($credentials)
 
-        # Upload hello.exe to the docker-test folder on VPS
-        Write-Host "Uploading hello.exe to ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
+        # Create the credential object
+        $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+        $credential = New-Object System.Management.Automation.PSCredential($username, $securePassword)
 
-        curl -T "./hello.exe" -H "Authorization: Basic $encodedCreds" "ftp://${{ secrets.VPS_IP }}/docker-test/hello.exe"
+        # Map the network drive
+        New-PSDrive -Name $NetDrive -PSProvider FileSystem -Root $NetShare -Credential $credential -Persist
+
+        # Copy hello.exe to the shared folder
+        Copy-Item -Path "./hello.exe" -Destination "$NetDrive\hello.exe"
+
+        # Remove the mapped drive after copying
+        Remove-PSDrive -Name Z
       shell: pwsh
