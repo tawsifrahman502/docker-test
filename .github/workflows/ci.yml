@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml
 
-name: C++ CI/CD Pipeline (Windows)
+name: C++ CI/CD Pipeline
 
 on:
   push:
@@ -12,48 +12,38 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest  # Using Windows runner for building the C++ code
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # Checks out your repository so the files are available in the runner.
+      uses: actions/checkout@v2
 
-    - name: Install MSVC (Microsoft C++ Build Tools)
-      run: |
-        choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
-        echo "Visual Studio Build Tools installed."
-
-    - name: Find and set up MSVC Environment
-      shell: cmd
-      run: |
-        for /r "C:\Program Files (x86)\Microsoft Visual Studio" %%i in (vcvarsall.bat) do @echo %%i > vcvarsall_path.txt
-        set /p vcvarsall_path=<vcvarsall_path.txt
-        echo Running MSVC environment setup from %vcvarsall_path%
-        call "%vcvarsall_path%" x64
-        echo "MSVC environment is set."
+    - name: Install build tools
+      run: sudo apt-get install g++ make
 
     - name: Build the C++ program
-      shell: cmd
-      run: |
-        cl /EHsc main.cpp /Fehello.exe  # This is where the code will be compiled into hello.exe.
+      run: make
 
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3  # Uploads the compiled hello.exe file.
+      uses: actions/upload-artifact@v2
       with:
         name: hello
-        path: ./hello.exe
+        path: ./hello
 
   deploy:
     needs: build
-    runs-on: windows-latest  # Deployment step, again using Windows.
+    runs-on: ubuntu-latest
 
     steps:
     - name: Download Build Artifacts
-      uses: actions/download-artifact@v3  # Downloads the previously uploaded hello.exe.
+      uses: actions/download-artifact@v2
+      with:
+        name: hello
 
-    - name: Transfer and Execute on Windows VM using pscp
-      run: |
-        echo "Transferring hello.exe to EC2 instance"
-        pscp -pw "${{ secrets.SERVER_PASSWORD }}" hello.exe Administrator@ec2-3-18-112-50.us-east-2.compute.amazonaws.com:C:/path/to/deploy/hello.exe
+    - name: Install sshpass
+      run: sudo apt-get install sshpass
+
+    - name: Push to EC2 Server
+      run: sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp hello Administrator@ec2-3-18-112-50.us-east-2.compute.amazonaws.com:/C:/docker-test/
       env:
         SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
