@@ -21,14 +21,21 @@ jobs:
     - name: Install MSVC (Microsoft C++ Build Tools)
       run: |
         choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
-        refreshenv
+        echo "Visual Studio Build Tools installed."
+
+    - name: Set up MSVC Environment
+      shell: cmd
+      run: |
+        "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        echo "MSVC environment is set."
 
     - name: Build the C++ program
+      shell: cmd
       run: |
         cl /EHsc main.cpp /Fehello.exe
 
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3  # Updated to v3
+      uses: actions/upload-artifact@v3
       with:
         name: hello
         path: ./hello.exe
@@ -39,7 +46,7 @@ jobs:
 
     steps:
     - name: Download Build Artifacts
-      uses: actions/download-artifact@v3  # Updated to v3
+      uses: actions/download-artifact@v3
       with:
         name: hello
 
