@@ -21,12 +21,22 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
+    - name: Upload hello.exe as an artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: hello-exe
+        path: ./hello.exe  # Upload hello.exe for later use in the deploy step
 
   deploy:
     needs: build
     runs-on: windows-latest  # Run the deployment on a Windows environment
 
     steps:
+    - name: Download hello.exe artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: hello-exe  # Download the artifact (hello.exe)
+
     - name: Upload hello.exe to VPS via FTP using PowerShell
       run: |
         $username = "${{ secrets.VPS_USER }}"
