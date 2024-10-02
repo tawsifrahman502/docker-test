@@ -23,7 +23,7 @@ jobs:
 
     - name: Copy hello.exe to VPS via SMB
       run: |
-        $NetDrive = "Z:"
+        $NetDrive = "Z"
         $NetShare = "\\${{ secrets.VPS_IP }}\docker-test"  # Path to the shared folder
         $username = "${{ secrets.VPS_USER }}"
         $password = "${{ secrets.VPS_PASSWORD }}"
