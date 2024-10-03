@@ -3,14 +3,14 @@ name: C++ CI/CD Pipeline for Windows
 on:
   push:
     branches:
-      - test  # Run this on every push to the test branch
+      - test
   pull_request:
     branches:
       - test
 
 jobs:
   build:
-    runs-on: windows-latest  # Run the build job on a Windows environment
+    runs-on: windows-latest
 
     steps:
     - name: Checkout code
@@ -30,23 +30,21 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: hello-folder-artifact
-        path: ./hello-folder  # Upload the folder containing hello.exe
+        path: hello-folder/  # Correct folder path
 
   deploy:
     needs: build
-    runs-on: windows-latest  # Run the deployment on a Windows environment
+    runs-on: windows-latest
 
     steps:
     - name: Download hello-folder artifact
       uses: actions/download-artifact@v3
       with:
-        name: hello-folder-artifact  # Download the artifact (hello-folder)
+        name: hello-folder-artifact
 
-    # Verify if the hello-folder exists after download
-    - name: List the contents of the working directory
-      run: |
-        dir
-        dir hello-folder
+    # Verify if the folder and file exist
+    - name: List contents of hello-folder
+      run: dir hello-folder
 
     # Deploy the folder to the VPS
     - name: Upload hello-folder to VPS using WinRM (HTTP)
@@ -66,7 +64,7 @@ jobs:
         # Use WinRM to establish a session and copy the folder to the remote server (HTTP on port 5985)
         $session = New-PSSession -ComputerName $vpsIp -Credential $credential -Authentication Basic -Port 5985
 
-        # Copy the hello-folder to the destination folder on the VPS
+        # Copy the folder to the destination path on the VPS
         Copy-Item -Path "$(System.DefaultWorkingDirectory)\hello-folder\*" -Destination $destinationPath -ToSession $session -Recurse
 
         # Remove the session after the file transfer
