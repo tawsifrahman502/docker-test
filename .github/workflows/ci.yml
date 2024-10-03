@@ -21,11 +21,12 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    # Step 3: List all files generated in the working directory
+    # Step 3: List all files generated in the working directory (using PowerShell)
     - name: List all generated files
       run: |
         echo "Listing all files in the current working directory:"
-        dir . /s  # Correct way to list files recursively
+        Get-ChildItem -Recurse  # Correct way to list files recursively in PowerShell
+      shell: pwsh  # Ensure that we are using PowerShell
 
     # Step 4: Create a folder and move the generated files (exe, dll) into it
     - name: Create folder and move generated files
@@ -33,6 +34,7 @@ jobs:
         mkdir hello-folder
         move hello.exe hello-folder/
         move *.dll hello-folder/  # Move all DLL files to the folder if any are generated
+      shell: pwsh
 
     # Step 5: Upload the folder as an artifact
     - name: Upload hello-folder as an artifact
@@ -56,4 +58,5 @@ jobs:
     - name: List contents of the downloaded folder
       run: |
         echo "Listing contents of hello-folder after downloading:"
-        dir hello-folder  # List the contents of the folder
+        Get-ChildItem hello-folder  # List the contents of the folder
+      shell: pwsh
