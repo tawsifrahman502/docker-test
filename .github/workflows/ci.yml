@@ -21,30 +21,24 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    # Step 3: List all DLL files generated in the working directory
-    - name: List all generated DLL and EXE files
-      run: |
-        echo "Listing all DLL and EXE files in the current working directory:"
-        Get-ChildItem -Recurse -Filter *.dll  # List all DLL files
-        Get-ChildItem -Recurse -Filter *.exe  # List the hello.exe file
-      shell: pwsh
-
-    # Step 4: Create a folder and move the generated files (exe, dll) into it
+    # Step 3: Create a folder and move the generated files (exe, dll) into it
     - name: Create folder and move generated files
       run: |
         mkdir hello-folder
         move hello.exe hello-folder/
-        move *.dll hello-folder/  # Move all DLL files to the folder if any are generated
-        echo "Listing contents of hello-folder after moving files:"
-        Get-ChildItem hello-folder
-      shell: pwsh
+        move *.dll hello-folder/ || echo "No DLL files found"
+        echo "Listing contents of the current directory:"
+        dir
+        echo "Listing contents of hello-folder:"
+        dir hello-folder
+      shell: cmd
 
-    # Step 5: Upload the folder as an artifact
+    # Step 4: Upload the folder as an artifact
     - name: Upload hello-folder as an artifact
       uses: actions/upload-artifact@v3
       with:
         name: hello-folder-artifact
-        path: ./hello-folder  # Upload the folder containing hello.exe and dlls
+        path: hello-folder  # Upload the folder containing hello.exe and dlls
 
   deploy:
     needs: build
@@ -60,6 +54,8 @@ jobs:
     # Step 2: Verify the contents of the downloaded folder
     - name: List contents of the downloaded folder
       run: |
+        echo "Listing contents of the current directory after downloading:"
+        dir
         echo "Listing contents of hello-folder after downloading:"
-        Get-ChildItem hello-folder  # List the contents of the folder
-      shell: pwsh
+        dir hello-folder
+      shell: cmd
