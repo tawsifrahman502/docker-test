@@ -25,7 +25,7 @@ jobs:
     - name: List all generated files
       run: |
         echo "Listing all files in the current working directory:"
-        dir /s  # The /s flag shows files recursively in all subdirectories
+        dir . /s  # Correct way to list files recursively
 
     # Step 4: Create a folder and move the generated files (exe, dll) into it
     - name: Create folder and move generated files
