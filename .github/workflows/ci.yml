@@ -1,14 +1,12 @@
-# .github/workflows/ci.yml
-
 name: C++ CI/CD Pipeline for Windows
 
 on:
   push:
     branches:
-      - main  # Run this on every push to the main branch
+      - test  # Run this on every push to the test branch
   pull_request:
     branches:
-      - main
+      - test
 
 jobs:
   build:
@@ -21,23 +19,30 @@ jobs:
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    - name: Upload hello.exe as an artifact
+    # Create a folder and move the hello.exe inside it
+    - name: Create folder and move hello.exe
+      run: |
+        mkdir hello-folder
+        move hello.exe hello-folder/
+
+    # Upload the folder as an artifact
+    - name: Upload hello-folder as an artifact
       uses: actions/upload-artifact@v3
       with:
-        name: hello-exe
-        path: ./hello.exe  # Upload hello.exe for later use in the deploy step
+        name: hello-folder-artifact
+        path: ./hello-folder  # Upload the folder containing hello.exe
 
   deploy:
     needs: build
     runs-on: windows-latest  # Run the deployment on a Windows environment
 
     steps:
-    - name: Download hello.exe artifact
+    - name: Download hello-folder artifact
       uses: actions/download-artifact@v3
       with:
-        name: hello-exe  # Download the artifact (hello.exe)
+        name: hello-folder-artifact  # Download the artifact (hello-folder)
 
-    - name: Upload hello.exe to VPS using WinRM (HTTP)
+    - name: Upload hello-folder to VPS using WinRM (HTTP)
       run: |
         winrm set winrm/config/client '@{AllowUnencrypted="true"}'
         Set-Item WSMan:\localhost\Client\TrustedHosts -Value "${{ secrets.VPS_IP }}" -Force
@@ -49,13 +54,13 @@ jobs:
 
         # Define the VPS IP and destination path on the VPS
         $vpsIp = "${{ secrets.VPS_IP }}"
-        $destinationPath = "C:\\docker-test\\hello.exe"
+        $destinationPath = "C:\\docker-test\\hello-folder"
 
-        # Use WinRM to establish a session and copy the file to the remote server (HTTP on port 5985)
+        # Use WinRM to establish a session and copy the folder to the remote server (HTTP on port 5985)
         $session = New-PSSession -ComputerName $vpsIp -Credential $credential -Authentication Basic -Port 5985
 
-        # Copy hello.exe to the destination folder on the VPS
-        Copy-Item -Path "./hello.exe" -Destination $destinationPath -ToSession $session
+        # Copy the hello-folder to the destination folder on the VPS
+        Copy-Item -Path "./hello-folder/*" -Destination $destinationPath -ToSession $session -Recurse
 
         # Remove the session after the file transfer
         Remove-PSSession $session
