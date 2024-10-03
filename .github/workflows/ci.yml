@@ -13,8 +13,8 @@ jobs:
     runs-on: windows-latest  # Use a Windows environment
 
     steps:
-    # Step 1: Checkout code from repository
-    - name: Checkout code
+    # Step 1: Checkout the code from the repository
+    - name: Checkout repository
       uses: actions/checkout@v3
 
     # Step 2: Compile the C++ program using g++
