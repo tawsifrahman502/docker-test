@@ -3,70 +3,57 @@ name: C++ CI/CD Pipeline for Windows
 on:
   push:
     branches:
-      - test
+      - test  # Adjust to your branch if necessary
   pull_request:
     branches:
       - test
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-latest  # Use a Windows environment
 
     steps:
+    # Step 1: Checkout code from repository
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Step 2: Compile the C++ program using g++
     - name: Build the C++ program using g++
       run: g++ -o hello.exe main.cpp  # This compiles main.cpp to hello.exe
 
-    # Create a folder and move the hello.exe inside it
-    - name: Create folder and move hello.exe
+    # Step 3: List all files generated in the working directory
+    - name: List all generated files
+      run: |
+        echo "Listing all files in the current working directory:"
+        dir /s  # The /s flag shows files recursively in all subdirectories
+
+    # Step 4: Create a folder and move the generated files (exe, dll) into it
+    - name: Create folder and move generated files
       run: |
         mkdir hello-folder
         move hello.exe hello-folder/
+        move *.dll hello-folder/  # Move all DLL files to the folder if any are generated
 
-    # Upload the folder as an artifact
+    # Step 5: Upload the folder as an artifact
     - name: Upload hello-folder as an artifact
       uses: actions/upload-artifact@v3
       with:
         name: hello-folder-artifact
-        path: hello-folder/  # Correct folder path
+        path: ./hello-folder  # Upload the folder containing hello.exe and dlls
 
   deploy:
     needs: build
     runs-on: windows-latest
 
     steps:
+    # Step 1: Download the artifact (hello-folder)
     - name: Download hello-folder artifact
       uses: actions/download-artifact@v3
       with:
         name: hello-folder-artifact
 
-    # Verify if the folder and file exist
-    - name: List contents of hello-folder
-      run: dir hello-folder
-
-    # Deploy the folder to the VPS
-    - name: Upload hello-folder to VPS using WinRM (HTTP)
+    # Step 2: Verify the contents of the downloaded folder
+    - name: List contents of the downloaded folder
       run: |
-        winrm set winrm/config/client '@{AllowUnencrypted="true"}'
-        Set-Item WSMan:\localhost\Client\TrustedHosts -Value "${{ secrets.VPS_IP }}" -Force
-
-        $username = "${{ secrets.VPS_USER }}"
-        $password = "${{ secrets.VPS_PASSWORD }}"
-        $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
-        $credential = New-Object System.Management.Automation.PSCredential($username, $securePassword)
-
-        # Define the VPS IP and destination path on the VPS
-        $vpsIp = "${{ secrets.VPS_IP }}"
-        $destinationPath = "C:\\docker-test\\hello-folder"
-
-        # Use WinRM to establish a session and copy the folder to the remote server (HTTP on port 5985)
-        $session = New-PSSession -ComputerName $vpsIp -Credential $credential -Authentication Basic -Port 5985
-
-        # Copy the folder to the destination path on the VPS
-        Copy-Item -Path "$(System.DefaultWorkingDirectory)\hello-folder\*" -Destination $destinationPath -ToSession $session -Recurse
-
-        # Remove the session after the file transfer
-        Remove-PSSession $session
-      shell: pwsh
+        echo "Listing contents of hello-folder after downloading:"
+        dir hello-folder  # List the contents of the folder
